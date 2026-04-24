@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minsu & Dahee Calendar</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Noto Serif KR', Georgia, serif; background: #f0ece4; min-height: 100vh; display: flex; justify-content: center; padding: 24px 16px; }
+    .wrap { background: #f7f3ec; border-radius: 16px; font-family: 'Noto Serif KR', Georgia, serif; overflow: hidden; width: 100%; max-width: 400px; height: fit-content; }
+    .top-bar { background: #f0e9dc; padding: 16px 20px 14px; border-bottom: 1px solid #e0d5c4; display: flex; align-items: center; justify-content: space-between; }
+    .top-title { font-size: 17px; color: #3a2c1e; font-weight: 500; }
+    .top-right { display: flex; align-items: center; gap: 6px; }
+    .name-badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 500; cursor: default; }
+    .nb-a { background: #f0e2d0; color: #8a5a3a; }
+    .nb-b { background: #dce8f0; color: #3a6a8a; }
+    .cal-nav { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px 8px; }
+    .cal-month { font-size: 16px; color: #3a2c1e; font-weight: 500; }
+    .cal-nav-btn { background: none; border: none; font-size: 16px; color: #a08c74; cursor: pointer; padding: 4px 8px; }
+    .cal-grid { padding: 0 12px 12px; }
+    .day-labels { display: grid; grid-template-columns: repeat(7, 1fr); margin-bottom: 4px; }
+    .day-label { text-align: center; font-size: 10px; color: #b0956f; padding: 4px 0; }
+    .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+    .day-cell { aspect-ratio: 1; border-radius: 8px; padding: 3px 2px; cursor: pointer; transition: background .15s; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .day-cell:hover { background: #ede8dc; }
+    .day-cell.selected { background: #e0d5c4; }
+    .day-cell.empty { cursor: default; }
+    .day-cell.empty:hover { background: transparent; }
+    .day-num { font-size: 12px; color: #3a2c1e; }
+    .day-num.sun { color: #c47a5a; }
+    .day-num.sat { color: #5a7ac4; }
+    .day-num.holiday { color: #c47a5a; }
+    .today-row { display: flex; align-items: center; justify-content: center; gap: 3px; }
+    .today-badge { font-size: 8px; background: #3a2c1e; color: #f7f3ec; border-radius: 3px; padding: 1px 4px; letter-spacing: 0.3px; line-height: 1.4; }
+    .holiday-name { font-size: 6px; color: #c47a5a; text-align: center; line-height: 1.2; padding: 0 1px; margin-top: 1px; }
+    .dots { display: flex; gap: 2px; justify-content: center; margin-top: 2px; }
+    .dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+    .dot-a { background: #d4956a; }
+    .dot-b { background: #6a9ab4; }
+    .memo-panel { margin: 0 12px 16px; background: #fff; border: 1px solid #e8dfd2; border-radius: 12px; overflow: hidden; }
+    .memo-header { padding: 12px 16px; border-bottom: 1px solid #f0e8dc; display: flex; align-items: center; justify-content: space-between; }
+    .memo-date { font-size: 13px; color: #3a2c1e; font-weight: 500; }
+    .memo-holiday-label { font-size: 11px; color: #c47a5a; margin-top: 2px; font-style: italic; }
+    .memo-add-btn { font-size: 11px; background: #3a2c1e; color: #f7f3ec; border: none; border-radius: 6px; padding: 5px 10px; cursor: pointer; font-family: 'Noto Serif KR', serif; white-space: nowrap; }
+    .memo-entries { padding: 10px 16px; }
+    .memo-entry { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f5f0e8; align-items: flex-start; }
+    .memo-entry:last-child { border-bottom: none; }
+    .memo-who { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 500; flex-shrink: 0; margin-top: 2px; }
+    .who-a { background: #f0e2d0; color: #8a5a3a; }
+    .who-b { background: #dce8f0; color: #3a6a8a; }
+    .memo-content { flex: 1; }
+    .memo-name { font-size: 10px; color: #a08c74; margin-bottom: 3px; }
+    .memo-text { font-size: 13px; color: #3a2c1e; line-height: 1.7; }
+    .memo-time { font-size: 10px; color: #c4b5a0; margin-top: 2px; }
+    .memo-actions { display: flex; gap: 6px; margin-top: 6px; }
+    .action-btn { font-size: 10px; color: #b0956f; background: none; border: none; cursor: pointer; font-family: 'Noto Serif KR', serif; padding: 0; }
+    .action-btn:hover { color: #3a2c1e; }
+    .action-btn.del { color: #c4a0a0; }
+    .action-btn.del:hover { color: #993C1D; }
+    .edit-area { margin-top: 8px; }
+    .edit-input { width: 100%; font-size: 13px; padding: 8px 10px; border-radius: 8px; border: 1.5px solid #c8b49a; background: #faf8f4; color: #3a2c1e; font-family: 'Noto Serif KR', serif; outline: none; resize: none; line-height: 1.7; margin-bottom: 6px; }
+    .edit-btns { display: flex; gap: 6px; }
+    .edit-save { font-size: 11px; background: #3a2c1e; color: #f7f3ec; border: none; border-radius: 6px; padding: 5px 12px; cursor: pointer; font-family: 'Noto Serif KR', serif; }
+    .edit-cancel { font-size: 11px; background: #f0e9dc; color: #8a7055; border: none; border-radius: 6px; padding: 5px 12px; cursor: pointer; font-family: 'Noto Serif KR', serif; }
+    .memo-empty { padding: 20px; text-align: center; font-size: 12px; color: #c4b5a0; font-style: italic; }
+    .write-area { padding: 12px 16px 16px; border-top: 1px solid #f0e8dc; display: none; background: #faf8f4; }
+    .write-who-row { display: flex; gap: 8px; margin-bottom: 10px; }
+    .who-btn { flex: 1; padding: 8px; border-radius: 8px; border: 1.5px solid #e0d5c4; background: #fff; font-size: 13px; font-family: 'Noto Serif KR', serif; cursor: pointer; transition: all .15s; color: #a08c74; }
+    .who-btn.active-a { background: #f0e2d0; border-color: #d4956a; color: #8a5a3a; font-weight: 500; }
+    .who-btn.active-b { background: #dce8f0; border-color: #6a9ab4; color: #3a6a8a; font-weight: 500; }
+    .write-input { width: 100%; font-size: 14px; padding: 12px 14px; border-radius: 10px; border: 1.5px solid #e0d5c4; background: #fff; color: #3a2c1e; font-family: 'Noto Serif KR', serif; outline: none; margin-bottom: 10px; resize: none; line-height: 1.7; }
+    .write-input::placeholder { color: #c4b5a0; }
+    .write-input:focus { border-color: #c8b49a; }
+    .write-save { width: 100%; font-size: 13px; background: #3a2c1e; color: #f7f3ec; border: none; border-radius: 8px; padding: 11px; cursor: pointer; font-family: 'Noto Serif KR', serif; }
+    .write-save:hover { background: #5a3e26; }
+    .holiday-panel { margin: 0 12px 16px; background: #fff; border: 1px solid #e8dfd2; border-radius: 12px; overflow: hidden; display: none; }
+    .holiday-panel-header { padding: 12px 16px; border-bottom: 1px solid #f0e8dc; display: flex; align-items: center; justify-content: space-between; }
+    .holiday-panel-title { font-size: 13px; color: #3a2c1e; font-weight: 500; }
+    .holiday-close-btn { font-size: 11px; color: #a08c74; background: none; border: none; cursor: pointer; font-family: 'Noto Serif KR', serif; }
+    .holiday-add-row { padding: 12px 16px; border-bottom: 1px solid #f0e8dc; display: flex; gap: 6px; align-items: center; }
+    .holiday-date-input { font-size: 12px; padding: 7px 10px; border-radius: 8px; border: 1px solid #e0d5c4; background: #faf8f4; color: #3a2c1e; outline: none; flex: 1; }
+    .holiday-name-input { font-size: 12px; padding: 7px 10px; border-radius: 8px; border: 1px solid #e0d5c4; background: #faf8f4; color: #3a2c1e; font-family: 'Noto Serif KR', serif; outline: none; flex: 1; }
+    .holiday-name-input::placeholder { color: #c4b5a0; }
+    .holiday-add-btn { font-size: 11px; background: #3a2c1e; color: #f7f3ec; border: none; border-radius: 6px; padding: 7px 12px; cursor: pointer; font-family: 'Noto Serif KR', serif; white-space: nowrap; }
+    .holiday-list { padding: 10px 16px; max-height: 200px; overflow-y: auto; }
+    .holiday-item { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #f5f0e8; }
+    .holiday-item:last-child { border-bottom: none; }
+    .holiday-item-date { font-size: 12px; color: #c47a5a; min-width: 90px; }
+    .holiday-item-name { font-size: 12px; color: #3a2c1e; flex: 1; }
+    .holiday-del-btn { font-size: 10px; color: #c4a0a0; background: none; border: none; cursor: pointer; font-family: 'Noto Serif KR', serif; }
+    .holiday-del-btn:hover { color: #993C1D; }
+    .holiday-empty { padding: 16px; text-align: center; font-size: 12px; color: #c4b5a0; font-style: italic; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top-bar">
+      <p class="top-title">Minsu & Dahee Calendar</p>
+      <div class="top-right">
+        <span class="name-badge nb-a">다희</span>
+        <span class="name-badge nb-b">민수</span>
+
+      </div>
+    </div>
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button>
+      <p class="cal-month" id="cal-month"></p>
+      <button class="cal-nav-btn" onclick="changeMonth(1)">›</button>
+    </div>
+    <div class="cal-grid">
+      <div class="day-labels">
+        <div class="day-label" style="color:#c47a5a">일</div>
+        <div class="day-label">월</div>
+        <div class="day-label">화</div>
+        <div class="day-label">수</div>
+        <div class="day-label">목</div>
+        <div class="day-label">금</div>
+        <div class="day-label" style="color:#5a7ac4">토</div>
+      </div>
+      <div class="days-grid" id="days-grid"></div>
+    </div>
+    <div class="memo-panel">
+      <div class="memo-header">
+        <div>
+          <p class="memo-date" id="memo-date">날짜를 선택하세요</p>
+          <p class="memo-holiday-label" id="memo-holiday" style="display:none"></p>
+        </div>
+        <button class="memo-add-btn" id="add-btn" onclick="toggleWrite()" style="display:none">+ 메모</button>
+      </div>
+      <div class="memo-entries" id="memo-entries">
+        <p class="memo-empty">달력에서 날짜를 클릭해주세요</p>
+      </div>
+      <div class="write-area" id="write-area">
+        <div class="write-who-row">
+          <button class="who-btn active-a" id="btn-a" onclick="selectWho('a')">🟠 다희</button>
+          <button class="who-btn" id="btn-b" onclick="selectWho('b')">🔵 민수</button>
+        </div>
+        <textarea class="write-input" id="write-input" placeholder="기억해야 할 일을 적어주세요..." rows="3"></textarea>
+        <button class="write-save" onclick="saveMemo()">저장하기</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://aqaqqxdoqwrcndacbwyz.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxYXFxeGRvcXdyY25kYWNid3l6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxODMyNDAsImV4cCI6MjA5MTc1OTI0MH0.iApfes5K3HV4VDDzf6boshjNNVmouLqzyHIJqW8te5M';
+
+    let holidays = {
+      '2026-05-05':'어린이날','2026-05-24':'부처님오신날','2026-06-06':'현충일',
+      '2026-08-15':'광복절','2026-09-24':'추석 연휴','2026-09-25':'추석','2026-09-26':'추석 연휴',
+      '2026-10-03':'개천절','2026-10-09':'한글날','2026-12-25':'성탄절',
+    };
+    let cur=new Date(2026,3,1),selectedDate=null,selectedWho='a',editingIndex=null,memos={};
+    const MIN_Y=2026,MIN_M=3;
+
+    function getKey(y,m,d){return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
+    function getTodayKey(){const t=new Date();return getKey(t.getFullYear(),t.getMonth(),t.getDate());}
+
+    async function fetchMemos(date){
+      const res=await fetch(`${SUPABASE_URL}/rest/v1/calendar_memos?date=eq.${date}&select=*&order=created_at.asc`,{headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}});
+      return await res.json();
+    }
+    async function upsertMemo(date,who,name,text){
+      await fetch(`${SUPABASE_URL}/rest/v1/calendar_memos`,{method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({date,who,name,text})});
+    }
+    async function updateMemo(id,text){
+      await fetch(`${SUPABASE_URL}/rest/v1/calendar_memos?id=eq.${id}`,{method:'PATCH',headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({text,edited:true})});
+    }
+    async function deleteMemoById(id){
+      await fetch(`${SUPABASE_URL}/rest/v1/calendar_memos?id=eq.${id}`,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}});
+    }
+
+    function renderCal(){
+      const y=cur.getFullYear(),m=cur.getMonth();
+      document.getElementById('cal-month').textContent=`${y}년 ${m+1}월`;
+      const first=new Date(y,m,1).getDay(),last=new Date(y,m+1,0).getDate(),today=new Date();
+      const grid=document.getElementById('days-grid');grid.innerHTML='';
+      for(let i=0;i<first;i++){const el=document.createElement('div');el.className='day-cell empty';grid.appendChild(el);}
+      for(let d=1;d<=last;d++){
+        const el=document.createElement('div'),dow=(first+d-1)%7,key=getKey(y,m,d);
+        const isToday=today.getFullYear()===y&&today.getMonth()===m&&today.getDate()===d;
+        el.className='day-cell'+(selectedDate===key?' selected':'');
+        el.onclick=()=>selectDate(y,m,d);
+        const row=document.createElement('div');row.className='today-row';
+        const numEl=document.createElement('p');
+        numEl.className='day-num'+(holidays[key]||dow===0?' holiday':dow===6?' sat':'');
+        numEl.textContent=d;row.appendChild(numEl);
+        if(isToday){const b=document.createElement('span');b.className='today-badge';b.textContent='today';row.appendChild(b);}
+        el.appendChild(row);
+        if(holidays[key]){const hl=document.createElement('p');hl.className='holiday-name';hl.textContent=holidays[key];el.appendChild(hl);}
+        if(memos[key]&&memos[key].length>0){
+          const dots=document.createElement('div');dots.className='dots';
+          if(memos[key].some(e=>e.who==='a')){const d=document.createElement('div');d.className='dot dot-a';dots.appendChild(d);}
+          if(memos[key].some(e=>e.who==='b')){const d=document.createElement('div');d.className='dot dot-b';dots.appendChild(d);}
+          el.appendChild(dots);
+        }
+        grid.appendChild(el);
+      }
+      const pb=document.querySelector('.cal-nav-btn:first-child');
+      pb.style.opacity=(y===MIN_Y&&m===MIN_M)?'0.3':'1';
+      pb.style.pointerEvents=(y===MIN_Y&&m===MIN_M)?'none':'auto';
+    }
+
+    async function selectDate(y,m,d){
+      selectedDate=getKey(y,m,d);
+      const days=['일','월','화','수','목','금','토'];
+      document.getElementById('memo-date').textContent=`${y}년 ${m+1}월 ${d}일 ${days[new Date(y,m,d).getDay()]}요일`;
+      const hel=document.getElementById('memo-holiday');
+      if(holidays[selectedDate]){hel.textContent='📅 '+holidays[selectedDate];hel.style.display='block';}
+      else hel.style.display='none';
+      document.getElementById('add-btn').style.display='block';
+      document.getElementById('write-area').style.display='none';
+      editingIndex=null;
+      const rows=await fetchMemos(selectedDate);
+      memos[selectedDate]=rows;
+      renderMemos();renderCal();
+    }
+
+    function renderMemos(){
+      const el=document.getElementById('memo-entries'),entries=memos[selectedDate]||[];
+      if(!entries.length){el.innerHTML='<p class="memo-empty">아직 메모가 없어요. + 메모를 눌러보세요 ✏️</p>';return;}
+      const now=new Date();
+      el.innerHTML=entries.map((e,i)=>{
+        const t=new Date(e.created_at);
+        const h=t.getHours(),min=String(t.getMinutes()).padStart(2,'0');
+        const time=`${h>=12?'오후':'오전'} ${h%12||12}:${min}`;
+        return `<div class="memo-entry">
+          <div class="memo-who ${e.who==='a'?'who-a':'who-b'}">${e.name[0]}</div>
+          <div class="memo-content">
+            <p class="memo-name">${e.name}</p>
+            ${editingIndex===i?`<div class="edit-area"><textarea class="edit-input" id="edit-input-${i}" rows="2">${e.text}</textarea><div class="edit-btns"><button class="edit-save" onclick="saveEdit(${i})">저장</button><button class="edit-cancel" onclick="cancelEdit()">취소</button></div></div>`:`<p class="memo-text">${e.text}</p><p class="memo-time">${time}${e.edited?' · 수정됨':''}</p><div class="memo-actions"><button class="action-btn" onclick="startEdit(${i})">수정</button><button class="action-btn del" onclick="deleteMemo(${i})">삭제</button></div>`}
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function startEdit(i){editingIndex=i;renderMemos();setTimeout(()=>{const el=document.getElementById(`edit-input-${i}`);if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length);}},50);}
+    function cancelEdit(){editingIndex=null;renderMemos();}
+    async function saveEdit(i){
+      const val=document.getElementById(`edit-input-${i}`).value.trim();
+      if(!val)return;
+      await updateMemo(memos[selectedDate][i].id,val);
+      editingIndex=null;
+      const rows=await fetchMemos(selectedDate);
+      memos[selectedDate]=rows;renderMemos();
+    }
+    async function deleteMemo(i){
+      if(!confirm('이 메모를 삭제할까요?'))return;
+      await deleteMemoById(memos[selectedDate][i].id);
+      const rows=await fetchMemos(selectedDate);
+      memos[selectedDate]=rows;renderMemos();renderCal();
+    }
+    function toggleWrite(){const el=document.getElementById('write-area');el.style.display=el.style.display==='block'?'none':'block';editingIndex=null;renderMemos();}
+    function selectWho(who){selectedWho=who;document.getElementById('btn-a').className='who-btn'+(who==='a'?' active-a':'');document.getElementById('btn-b').className='who-btn'+(who==='b'?' active-b':'');}
+    async function saveMemo(){
+      if(!selectedDate)return;
+      const text=document.getElementById('write-input').value.trim();
+      if(!text){document.getElementById('write-input').focus();return;}
+      const name=selectedWho==='a'?'다희':'민수';
+      await upsertMemo(selectedDate,selectedWho,name,text);
+      document.getElementById('write-input').value='';
+      document.getElementById('write-area').style.display='none';
+      const rows=await fetchMemos(selectedDate);
+      memos[selectedDate]=rows;renderMemos();renderCal();
+    }
+    function changeMonth(dir){const y=cur.getFullYear(),m=cur.getMonth();if(dir===-1&&y===MIN_Y&&m===MIN_M)return;cur=new Date(y,m+dir,1);renderCal();}
+
+    renderCal();
+  </script>
+</body>
+</html>

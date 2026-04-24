@@ -186,15 +186,18 @@
     async function fetchHolidays(){
       try{
         const res=await fetch(`${SUPABASE_URL}/rest/v1/calendar_holidays?select=*&order=date.asc`,{headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}});
+        if(!res.ok){console.error('공휴일 불러오기 실패:',res.status,await res.text());return;}
         const rows=await res.json();
         if(Array.isArray(rows)){holidays={};rows.forEach(r=>{holidays[r.date]=r.name;});}
-      }catch(e){}
+      }catch(e){console.error('fetchHolidays 오류:',e);}
     }
     async function insertHoliday(date,name){
-      await fetch(`${SUPABASE_URL}/rest/v1/calendar_holidays`,{method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({date,name})});
+      const res=await fetch(`${SUPABASE_URL}/rest/v1/calendar_holidays`,{method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({date,name})});
+      if(!res.ok){const err=await res.text();throw new Error(err);}
     }
     async function deleteHolidayFromDB(date){
-      await fetch(`${SUPABASE_URL}/rest/v1/calendar_holidays?date=eq.${date}`,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}});
+      const res=await fetch(`${SUPABASE_URL}/rest/v1/calendar_holidays?date=eq.${date}`,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}});
+      if(!res.ok){const err=await res.text();throw new Error(err);}
     }
     async function fetchMonthMemos(y,m){
       try{
@@ -309,8 +312,25 @@
     async function changeMonth(dir){const y=cur.getFullYear(),m=cur.getMonth();if(dir===-1&&y===MIN_Y&&m===MIN_M)return;cur=new Date(y,m+dir,1);await fetchMonthMemos(cur.getFullYear(),cur.getMonth());renderCal();}
     function toggleHolidayPanel(){const p=document.getElementById('holiday-panel');const show=p.style.display!=='block';p.style.display=show?'block':'none';if(show)renderHolidayList();}
     function renderHolidayList(){const list=document.getElementById('holiday-list');const keys=Object.keys(holidays).sort();if(!keys.length){list.innerHTML='<p class="holiday-empty">등록된 공휴일이 없어요</p>';return;}list.innerHTML=keys.map(k=>`<div class="holiday-item"><span class="holiday-item-date">${k}</span><span class="holiday-item-name">${holidays[k]}</span><button class="holiday-del-btn" onclick="deleteHoliday('${k}')">삭제</button></div>`).join('');}
-    async function addHoliday(){const date=document.getElementById('holiday-date-input').value;const name=document.getElementById('holiday-name-input').value.trim();if(!date||!name)return;await insertHoliday(date,name);holidays[date]=name;document.getElementById('holiday-date-input').value='';document.getElementById('holiday-name-input').value='';renderHolidayList();renderCal();}
-    async function deleteHoliday(key){await deleteHolidayFromDB(key);delete holidays[key];renderHolidayList();renderCal();if(selectedDate){const hel=document.getElementById('memo-holiday');if(holidays[selectedDate]){hel.textContent='📅 '+holidays[selectedDate];hel.style.display='block';}else hel.style.display='none';}}
+    async function addHoliday(){
+      const date=document.getElementById('holiday-date-input').value;const name=document.getElementById('holiday-name-input').value.trim();
+      if(!date||!name)return;
+      if(holidays[date]){alert(`${date}에 이미 공휴일이 등록되어 있어요.`);return;}
+      try{
+        await insertHoliday(date,name);
+        holidays[date]=name;
+        document.getElementById('holiday-date-input').value='';document.getElementById('holiday-name-input').value='';
+        renderHolidayList();renderCal();
+      }catch(e){console.error('공휴일 추가 실패:',e);alert('공휴일 저장에 실패했어요. Supabase 연결을 확인해주세요.');}
+    }
+    async function deleteHoliday(key){
+      try{
+        await deleteHolidayFromDB(key);
+        delete holidays[key];
+        renderHolidayList();renderCal();
+        if(selectedDate){const hel=document.getElementById('memo-holiday');if(holidays[selectedDate]){hel.textContent='📅 '+holidays[selectedDate];hel.style.display='block';}else hel.style.display='none';}
+      }catch(e){console.error('공휴일 삭제 실패:',e);alert('공휴일 삭제에 실패했어요. 다시 시도해주세요.');}
+    }
 
     async function init(){await Promise.allSettled([fetchHolidays(),fetchMonthMemos(cur.getFullYear(),cur.getMonth())]);renderCal();}
     init();

@@ -15,6 +15,7 @@
     .name-badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 500; cursor: default; }
     .nb-a { background: #f0e2d0; color: #8a5a3a; }
     .nb-b { background: #dce8f0; color: #3a6a8a; }
+    .nb-holiday { background: #e4ede0; color: #4a6a3a; cursor: pointer; border: none; font-family: 'Noto Serif KR', serif; }
     .cal-nav { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px 8px; }
     .cal-month { font-size: 16px; color: #3a2c1e; font-weight: 500; }
     .cal-nav-btn { background: none; border: none; font-size: 16px; color: #a08c74; cursor: pointer; padding: 4px 8px; }
@@ -100,7 +101,7 @@
       <div class="top-right">
         <span class="name-badge nb-a">다희</span>
         <span class="name-badge nb-b">민수</span>
-
+        <button class="name-badge nb-holiday" onclick="toggleHolidayPanel()">공휴일</button>
       </div>
     </div>
     <div class="cal-nav">
@@ -119,6 +120,18 @@
         <div class="day-label" style="color:#5a7ac4">토</div>
       </div>
       <div class="days-grid" id="days-grid"></div>
+    </div>
+    <div class="holiday-panel" id="holiday-panel">
+      <div class="holiday-panel-header">
+        <p class="holiday-panel-title">공휴일 관리</p>
+        <button class="holiday-close-btn" onclick="toggleHolidayPanel()">닫기</button>
+      </div>
+      <div class="holiday-add-row">
+        <input type="date" class="holiday-date-input" id="holiday-date-input">
+        <input type="text" class="holiday-name-input" id="holiday-name-input" placeholder="공휴일 이름">
+        <button class="holiday-add-btn" onclick="addHoliday()">추가</button>
+      </div>
+      <div class="holiday-list" id="holiday-list"></div>
     </div>
     <div class="memo-panel">
       <div class="memo-header">
@@ -265,6 +278,10 @@
       memos[selectedDate]=rows;renderMemos();renderCal();
     }
     function changeMonth(dir){const y=cur.getFullYear(),m=cur.getMonth();if(dir===-1&&y===MIN_Y&&m===MIN_M)return;cur=new Date(y,m+dir,1);renderCal();}
+    function toggleHolidayPanel(){const p=document.getElementById('holiday-panel');const show=p.style.display!=='block';p.style.display=show?'block':'none';if(show)renderHolidayList();}
+    function renderHolidayList(){const list=document.getElementById('holiday-list');const keys=Object.keys(holidays).sort();if(!keys.length){list.innerHTML='<p class="holiday-empty">등록된 공휴일이 없어요</p>';return;}list.innerHTML=keys.map(k=>`<div class="holiday-item"><span class="holiday-item-date">${k}</span><span class="holiday-item-name">${holidays[k]}</span><button class="holiday-del-btn" onclick="deleteHoliday('${k}')">삭제</button></div>`).join('');}
+    function addHoliday(){const date=document.getElementById('holiday-date-input').value;const name=document.getElementById('holiday-name-input').value.trim();if(!date||!name)return;holidays[date]=name;document.getElementById('holiday-date-input').value='';document.getElementById('holiday-name-input').value='';renderHolidayList();renderCal();}
+    function deleteHoliday(key){delete holidays[key];renderHolidayList();renderCal();if(selectedDate){const hel=document.getElementById('memo-holiday');if(holidays[selectedDate]){hel.textContent='📅 '+holidays[selectedDate];hel.style.display='block';}else hel.style.display='none';}}
 
     renderCal();
   </script>

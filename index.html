@@ -321,7 +321,7 @@
         holidays[date]=name;
         document.getElementById('holiday-date-input').value='';document.getElementById('holiday-name-input').value='';
         renderHolidayList();renderCal();
-      }catch(e){console.error('공휴일 추가 실패:',e);alert('공휴일 저장에 실패했어요. Supabase 연결을 확인해주세요.');}
+      }catch(e){console.error('공휴일 추가 실패:',e);let d='';try{d=JSON.parse(e.message).message||'';}catch(_){}alert('공휴일 저장에 실패했어요.'+(d?'\n오류: '+d:''));}
     }
     async function deleteHoliday(key){
       try{
@@ -329,7 +329,7 @@
         delete holidays[key];
         renderHolidayList();renderCal();
         if(selectedDate){const hel=document.getElementById('memo-holiday');if(holidays[selectedDate]){hel.textContent='📅 '+holidays[selectedDate];hel.style.display='block';}else hel.style.display='none';}
-      }catch(e){console.error('공휴일 삭제 실패:',e);alert('공휴일 삭제에 실패했어요. 다시 시도해주세요.');}
+      }catch(e){console.error('공휴일 삭제 실패:',e);let d='';try{d=JSON.parse(e.message).message||'';}catch(_){}alert('공휴일 삭제에 실패했어요.'+(d?'\n오류: '+d:''));}
     }
 
     async function init(){await Promise.allSettled([fetchHolidays(),fetchMonthMemos(cur.getFullYear(),cur.getMonth())]);renderCal();}

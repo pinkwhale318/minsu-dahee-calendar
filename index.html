@@ -10,9 +10,9 @@
     body { font-family: 'Noto Serif KR', Georgia, serif; background: #f0ece4; min-height: 100vh; display: flex; justify-content: center; padding: 24px 16px; }
     .wrap { background: #f7f3ec; border-radius: 16px; font-family: 'Noto Serif KR', Georgia, serif; overflow: hidden; width: 100%; max-width: 400px; height: fit-content; }
     .top-bar { background: #f0e9dc; padding: 16px 20px 14px; border-bottom: 1px solid #e0d5c4; display: flex; align-items: center; justify-content: space-between; }
-    .top-title { font-size: 17px; color: #3a2c1e; font-weight: 500; }
-    .top-right { display: flex; align-items: center; gap: 6px; }
-    .name-badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 500; cursor: default; }
+    .top-title { font-size: 17px; color: #3a2c1e; font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .top-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .name-badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 500; cursor: default; white-space: nowrap; }
     .nb-a { background: #f0e2d0; color: #8a5a3a; }
     .nb-b { background: #dce8f0; color: #3a6a8a; }
     .nb-holiday { background: #e4ede0; color: #4a6a3a; cursor: pointer; border: none; font-family: 'Noto Serif KR', serif; }
